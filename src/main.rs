@@ -1,3 +1,5 @@
+use flate2::write::GzEncoder;
+use flate2::Compression;
 use std::fs::File;
 use std::io::{self, BufReader, BufWriter, Read, Write};
 
@@ -40,16 +42,34 @@ fn write_file(filename: &str, data: &[u8]) -> io::Result<()> {
     Ok(())
 }
 
+// Compress data function
+fn compress_data(data: &[u8]) -> io::Result<Vec<u8>>{
+    // Create a buffer to hold the compressed data
+    let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
+
+    // Write the data to the encoder
+    encoder.write_all(data)?;
+
+    // Finish the compression process and retrieve the compressed data
+    let compressed_data = encoder.finish()?;
+
+    Ok(compressed_data)
+}
+
 fn main() {
-    // Usage of the read_file function
+    // Read the input file
     match read_file("example.txt") {
         Ok(data) => {
-            println!("File read successfully, size {} bytes", data.len());
-
-            // Usage of the write file function
-            match write_file("output.txt", &data) {
-                Ok(()) => println!("File written successfully"),
-                Err(e) => eprintln!("Failed to write file: {}", e),
+            // Compress the data
+            match compress_data(&data) {
+                Ok(compressed_data) => {
+                    // Write the compressed data to an output file
+                    match write_file("compressed.gz", &compressed_data) {
+                        Ok(()) => println!("File compressed and written successfully!"),
+                        Err(e) => eprintln!("Failed to write compressed file: {}", e),
+                    }
+                }
+                Err(e) => eprintln!("Failed to compress data: {}", e),
             }
         }
         Err(e) => eprintln!("Failed to read file: {}", e),
