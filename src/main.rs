@@ -1,4 +1,5 @@
 use flate2::write::GzEncoder;
+use flate2::read::GzDecoder;
 use flate2::Compression;
 use std::fs::File;
 use std::io::{self, BufReader, BufWriter, Read, Write};
@@ -56,8 +57,22 @@ fn compress_data(data: &[u8]) -> io::Result<Vec<u8>>{
     Ok(compressed_data)
 }
 
+// Decompress data function
+fn decompress_data(data: &[u8]) -> io::Result<Vec<u8>>{
+    // Create a buffer to hold the decompressed data
+    let mut decoder = GzDecoder::new(data);
+
+    // Create a vector to hold the decompressed data
+    let mut decompressed_data = Vec::new();
+
+    // Read the decompressed data into the vector
+    decoder.read_to_end(&mut decompressed_data)?;
+
+    Ok(decompressed_data)
+}
+
 fn main() {
-    // Read the input file
+    // File compression
     match read_file("example.txt") {
         Ok(data) => {
             // Compress the data
@@ -73,5 +88,23 @@ fn main() {
             }
         }
         Err(e) => eprintln!("Failed to read file: {}", e),
+    }
+
+    // File decompression
+    match read_file("compressed.gz") {
+        Ok(compressed_data) => {
+            // Decompress the data
+            match decompress_data(&compressed_data) {
+                Ok(decompressed_data) => {
+                    // Write the decompressed data to an output file
+                    match write_file("decompressed.txt", &decompressed_data) {
+                        Ok(()) => println!("File decompressed and written successfully!"),
+                        Err(e) => eprintln!("Failed to write decompressed data: {}", e),
+                    }
+                },
+                Err(e) => eprintln!("Failed to decompress data: {}", e),
+            }
+        },
+        Err(e) => eprintln!("Failed to read compressed data: {}", e),
     }
 }
