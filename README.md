@@ -1,4 +1,4 @@
-## File Comp Decomp
+## File Comp Decomp Testing
 
 ### 1. Build the project:
 ```rust
